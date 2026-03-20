@@ -15,4 +15,6 @@ class Card {
             return Number(this.rank);
         }
     }
+
+    
 }
