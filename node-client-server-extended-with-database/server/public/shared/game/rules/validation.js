@@ -1,0 +1,1 @@
+//prüfen, ob ein Zug erlaubt
