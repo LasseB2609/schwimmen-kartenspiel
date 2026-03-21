@@ -192,6 +192,8 @@ app.post('/database', (req, res) => {
 
 
 
+
+
 // All requests to /static/... will be redirected to static files in the folder "public"
 // call it with: http://localhost:8080/static
 app.use('/static', express.static('public'))
