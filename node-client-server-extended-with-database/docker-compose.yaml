@@ -1,3 +1,5 @@
+# startet Server + Datenbank gleichzeitig
+
 version: '3.3'
 services:
   server:

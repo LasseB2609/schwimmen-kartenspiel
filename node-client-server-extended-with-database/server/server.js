@@ -1,10 +1,12 @@
+//startet den Server
+
 'use strict';
 
-const express = require('express');
+const express = require('express'); //das Web-Framework
 
 // Database
-const mysql = require('mysql');
-// Database connection info - used from environment variables
+const mysql = require('mysql'); //Treiber, um mit der MySQL Datenbank zu reden
+// Datenbank Konfiguration:
 var dbInfo = {
     connectionLimit : 10,
     host: process.env.MYSQL_HOSTNAME,
@@ -28,7 +30,7 @@ connection.query("CREATE TABLE IF NOT EXISTS table1 (task_id INT AUTO_INCREMENT 
 */
 // See readme.md for more information about that.
 
-// Check the connection
+// nur ein Test, um zu schauen, ob die Datenbank läuft
 connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
     if (error) throw error; // <- this will throw the error and exit normally
     // check the solution - should be 2
@@ -43,14 +45,14 @@ connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
 });
 
 
-// Constants
+// Konstanten
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';
 
-// App
-const app = express();
+// Express-App erstellen
+const app = express(); // Webserver Objekt
 
-// Features for JSON Body
+// der Server kann Formulardaten und JSON lesen
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
