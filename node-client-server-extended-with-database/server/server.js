@@ -3,7 +3,7 @@
 'use strict';
 
 const express = require('express'); //das Web-Framework
-
+const http = require("http"); //für Socket.io
 // Database
 const mysql = require('mysql'); //Treiber, um mit der MySQL Datenbank zu reden
 // Datenbank Konfiguration:
@@ -51,12 +51,17 @@ const HOST = '0.0.0.0';
 
 // Express-App erstellen
 const app = express(); // Webserver Objekt
+const server = http.createServer(app); //für socket.io
+
+const { Server } = require("socket.io");
+const io = new Server(server); //hier eventuell noch CORS hinzufügen, falls fehler entstehen
+require("./socket")(io,connection);
 
 // der Server kann Formulardaten und JSON lesen
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Entrypoint - call it with: http://localhost:8080/ -> redirect you to http://localhost:8080/static
+// Entrypoint - leitet an /static weiter
 app.get('/', (req, res) => {
     console.log("Got a request and redirect it to the static page");
     // redirect will send the client to another path / route. In this case to the static route.
@@ -75,6 +80,7 @@ app.get('/request_info', (req, res) => {
 });
 
 // POST Path - call it with: POST http://localhost:8080/client_post
+//Client schickt JSON mit post_content und Server liest es und antwortet
 app.post('/client_post', (req, res) => {
     if (typeof req.body !== "undefined" && typeof req.body.post_content !== "undefined") {
         var post_content = req.body.post_content;
@@ -200,9 +206,15 @@ app.post('/database', (req, res) => {
 // call it with: http://localhost:8080/static
 app.use('/static', express.static('public'))
 
-// Start the actual server
-app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);
+//// Start the actual server
+//app.listen(PORT, HOST);
+//console.log(`Running on http://${HOST}:${PORT}`);
+
+//Server starten
+server.listen(PORT, HOST, () => {
+    console.log(`Running on http://${HOST}:${PORT}`);
+});
+
 
 // Start database connection
 const sleep = (milliseconds) => {
