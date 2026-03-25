@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "express": "^4.22",
-    "mysql": "^2.18"
+    "mysql": "^2.18",
+    "socket.io": "^4.7.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcrypt": "^5.1.0"
   }
 }
