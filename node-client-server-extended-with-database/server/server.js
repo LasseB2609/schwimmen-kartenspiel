@@ -221,10 +221,78 @@ const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+const JWT_SECRET = "SUPER_GEHEIMES_PASSWORT"; // später .env nutzen
 
+app.post("/register", async (req, res) => {
+    const { username, password } = req.body;
 
+    if (!username || !password)
+        return res.status(400).json({ message: "Username und Passwort erforderlich" });
 
+    // prüfen ob username existiert
+    connection.query(
+        "SELECT * FROM Player WHERE username = ?",
+        [username],
+        async (err, results) => {
+            if (err) return res.status(500).json({ message: "DB Fehler" });
+
+            if (results.length > 0)
+                return res.status(400).json({ message: "Benutzer existiert bereits" });
+
+            const hash = await bcrypt.hash(password, 10);
+
+            connection.query(
+                "INSERT INTO Player (username, password_hash) VALUES (?, ?)",
+                [username, hash],
+                (err2) => {
+                    if (err2) return res.status(500).json({ message: "DB Fehler" });
+                    res.status(201).json({ message: "Registrierung erfolgreich" });
+                }
+            );
+        }
+    );
+});
+
+app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password)
+        return res.status(400).json({ message: "Username und Passwort erforderlich" });
+
+    connection.query(
+        "SELECT * FROM Player WHERE username = ?",
+        [username],
+        async (err, results) => {
+            if (err) return res.status(500).json({ message: "DB Fehler" });
+
+            if (results.length === 0)
+                return res.status(400).json({ message: "Benutzer existiert nicht" });
+
+            const user = results[0];
+
+            const valid = await bcrypt.compare(password, user.password_hash);
+            if (!valid)
+                return res.status(401).json({ message: "Falsches Passwort" });
+
+            const token = jwt.sign(
+                {
+                    player_id: user.player_id,
+                    username: user.username
+                },
+                JWT_SECRET,
+                { expiresIn: "24h" }
+            );
+
+            res.json({ token });
+        }
+    );
+});
+
+//Zum Aufruf html 
+app.use(express.static("public"));
 
 
 
