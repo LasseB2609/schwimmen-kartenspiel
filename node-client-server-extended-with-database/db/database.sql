@@ -12,58 +12,103 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+-- ============================================
+--  TABLE: Player (Accounts)
+-- ============================================
 
---
--- Database: `exampledb`
---
+CREATE TABLE Player (
+    player_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    level INT DEFAULT 1,
+    money INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- --------------------------------------------------------
 
---
--- Table structure for table `table1`
---
+-- ============================================
+--  TABLE: Card (Statisches Kartendeck)
+-- ============================================
 
-CREATE TABLE `table1` (
-  `task_id` int(11) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE Card (
+    card_id INT AUTO_INCREMENT PRIMARY KEY,
+    suit ENUM('Herz', 'Karo', 'Kreuz', 'Pik') NOT NULL,
+    rank ENUM('7','8','9','10','B','D','K','A') NOT NULL,
+    value INT NOT NULL,
+    image_id VARCHAR(255)
+);
 
---
--- Dumping data for table `table1`
---
 
-INSERT INTO `table1` (`task_id`, `title`, `description`, `created_at`) VALUES
-(1, 'Super titel', 'langer text', '2020-04-09 12:18:07'),
-(2, 'Anderer Titel', 'Super Text', '2020-04-09 12:18:43'),
-(3, 'Anderer Titel2', 'noch mehr text', '2020-04-09 12:18:57');
+-- ============================================
+--  TABLE: Game (Ein einzelnes Spiel)
+-- ============================================
 
---
--- Indexes for dumped tables
---
+CREATE TABLE Game (
+    game_id INT AUTO_INCREMENT PRIMARY KEY,
+    status ENUM('waiting','playing','finished') DEFAULT 'waiting',
+    round_number INT DEFAULT 0,
+    current_player_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    finished_at TIMESTAMP NULL,
 
---
--- Indexes for table `table1`
---
-ALTER TABLE `table1`
-  ADD PRIMARY KEY (`task_id`);
+    CONSTRAINT fk_game_current_player
+        FOREIGN KEY (current_player_id)
+        REFERENCES Player(player_id)
+        ON DELETE SET NULL
+);
 
---
--- AUTO_INCREMENT for dumped tables
---
 
---
--- AUTO_INCREMENT for table `table1`
---
-ALTER TABLE `table1`
-  MODIFY `task_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-COMMIT;
+-- ============================================
+--  TABLE: Game_Player (Spieler in einem Spiel)
+-- ============================================
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+CREATE TABLE Game_Player (
+    game_id INT NOT NULL,
+    player_id INT NOT NULL,
+    socket_id VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    lives INT DEFAULT 3,
+
+    PRIMARY KEY (game_id, player_id),
+
+    CONSTRAINT fk_gp_game
+        FOREIGN KEY (game_id)
+        REFERENCES Game(game_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_gp_player
+        FOREIGN KEY (player_id)
+        REFERENCES Player(player_id)
+        ON DELETE CASCADE
+);
+
+
+-- ============================================
+--  TABLE: Game_Card (Karten im Spiel)
+-- ============================================
+
+CREATE TABLE Game_Card (
+    game_id INT NOT NULL,
+    card_id INT NOT NULL,
+    location ENUM('deck','table','player','discard') NOT NULL,
+    owner_player_id INT NULL,
+    position INT DEFAULT 0,
+
+    PRIMARY KEY (game_id, card_id),
+
+    CONSTRAINT fk_gc_game
+        FOREIGN KEY (game_id)
+        REFERENCES Game(game_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_gc_card
+        FOREIGN KEY (card_id)
+        REFERENCES Card(card_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_gc_owner
+        FOREIGN KEY (owner_player_id)
+        REFERENCES Player(player_id)
+        ON DELETE SET NULL
+);
+
